@@ -42,3 +42,9 @@ subprojects {
 }
 
 // 하위 모듈의 세부 설정입니다.
+project(':product') {
+    dependencies {
+        implementation project(':common')
+        implementation(testFixtures(project(":common")))
+    }
+}
