@@ -1,11 +1,14 @@
 package com.sparta.msa_exam.product;
 
+import com.sparta.common.BaseEntity;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication
 @EnableFeignClients
+@EnableJpaAuditing
+@SpringBootApplication(scanBasePackages = {"com.sparta.msa_exam.product", "com.sparta.common"})
 public class ProductApplication {
 
 	public static void main(String[] args) {
