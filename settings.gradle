@@ -1,0 +1,6 @@
+rootProject.name = 'root'
+include 'msa_exam'
+include 'msa_exam.gateway'
+include 'msa_exam.product'
+include 'msa_exam.order'
+include 'msa_exam.auth'
