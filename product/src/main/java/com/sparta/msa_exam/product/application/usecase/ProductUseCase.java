@@ -1,8 +1,8 @@
 package com.sparta.msa_exam.product.application.usecase;
 
-import com.sparta.msa_exam.product.framework.web.dto.ProductCreateInputDTO;
-import com.sparta.msa_exam.product.framework.web.dto.ProductCreateOutputDTO;
+import com.sparta.msa_exam.product.application.domain.Product;
+import com.sparta.msa_exam.product.application.domain.ProductForCreate;
 
 public interface ProductUseCase {
-    ProductCreateOutputDTO createProduct(ProductCreateInputDTO createInputDTO);
+    Product createProduct(ProductForCreate productForCreate);
 }

@@ -1,6 +1,6 @@
 package com.sparta.msa_exam.product.framework.web.controller;
 
-import com.sparta.msa_exam.product.domain.model.Product;
+import com.sparta.msa_exam.product.application.domain.Product;
 import com.sparta.msa_exam.product.framework.adapter.ProductPersistenceAdapter;
 import com.sparta.msa_exam.product.framework.web.dto.ProductReadOutputDTO;
 import java.util.List;

@@ -1,5 +1,7 @@
 package com.sparta.msa_exam.product.framework.web.controller;
 
+import com.sparta.msa_exam.product.application.domain.Product;
+import com.sparta.msa_exam.product.application.domain.ProductForCreate;
 import com.sparta.msa_exam.product.application.usecase.ProductUseCase;
 import com.sparta.msa_exam.product.framework.web.dto.ProductCreateInputDTO;
 import com.sparta.msa_exam.product.framework.web.dto.ProductCreateOutputDTO;
@@ -24,6 +26,13 @@ public class ProductCommandController {
     public ProductCreateOutputDTO createProduct(
         @Valid @RequestBody ProductCreateInputDTO productCreateInputDTO
     ) {
-        return productUseCase.createProduct(productCreateInputDTO);
+
+        ProductForCreate productForCreate = ProductCreateInputDTO.toDomain(
+            productCreateInputDTO.name(),
+            productCreateInputDTO.supplyPrice()
+        );
+
+        Product product = productUseCase.createProduct(productForCreate);
+        return ProductCreateOutputDTO.toDTO(product);
     }
 }

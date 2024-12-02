@@ -1,6 +1,6 @@
 package com.sparta.msa_exam.product.framework.web.dto;
 
-import com.sparta.msa_exam.product.domain.model.Product;
+import com.sparta.msa_exam.product.application.domain.Product;
 
 public record ProductCreateOutputDTO(
     Long productId,
@@ -8,11 +8,11 @@ public record ProductCreateOutputDTO(
     Integer supplyPrice
 ) {
 
-    public static ProductCreateOutputDTO toDTO(Product createProduct) {
+    public static ProductCreateOutputDTO toDTO(Product product) {
         return new ProductCreateOutputDTO(
-            createProduct.getId(),
-            createProduct.getName(),
-            createProduct.getSupplyPrice()
+            product.getId(),
+            product.getName(),
+            product.getSupplyPrice()
         );
     }
 }

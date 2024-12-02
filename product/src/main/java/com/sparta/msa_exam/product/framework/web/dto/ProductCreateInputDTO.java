@@ -1,5 +1,6 @@
 package com.sparta.msa_exam.product.framework.web.dto;
 
+import com.sparta.msa_exam.product.application.domain.ProductForCreate;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,4 +16,13 @@ public record ProductCreateInputDTO(
     Integer supplyPrice
 ) {
 
+    public static ProductForCreate toDomain(
+        String name,
+        Integer supplyPrice
+    ) {
+        return new ProductForCreate(
+            name,
+            supplyPrice
+        );
+    }
 }

@@ -1,7 +1,8 @@
 package com.sparta.msa_exam.product.domain.model;
 
 import com.sparta.common.BaseEntity;
-import com.sparta.msa_exam.product.framework.web.dto.ProductCreateInputDTO;
+import com.sparta.msa_exam.product.application.domain.Product;
+import com.sparta.msa_exam.product.application.domain.ProductForCreate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "t_product")
-public class Product extends BaseEntity {
+public class ProductEntity extends BaseEntity {
 
     @Id
     @Column(name = "product_id")
@@ -30,7 +31,7 @@ public class Product extends BaseEntity {
     @Column(nullable = false, name = "supply_price")
     private Integer supplyPrice;
 
-    private Product(
+    private ProductEntity(
         String name,
         Integer supplyPrice,
         Long userId
@@ -40,11 +41,19 @@ public class Product extends BaseEntity {
         this.supplyPrice = supplyPrice;
     }
 
-    public static Product toEntity(ProductCreateInputDTO createInputDTO) {
-        return new Product(
-            createInputDTO.name(),
-            createInputDTO.supplyPrice(),
+    public static ProductEntity toEntity(ProductForCreate productForCreate) {
+        return new ProductEntity(
+            productForCreate.name(),
+            productForCreate.supplyPrice(),
             1L
+        );
+    }
+
+    public Product toDomain() {
+        return new Product(
+            this.id,
+            this.name,
+            this.supplyPrice
         );
     }
 }

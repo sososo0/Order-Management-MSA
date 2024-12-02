@@ -1,6 +1,6 @@
 package com.sparta.msa_exam.product.framework.web.dto;
 
-import com.sparta.msa_exam.product.domain.model.Product;
+import com.sparta.msa_exam.product.application.domain.Product;
 import java.util.List;
 import java.util.stream.Collectors;
 
