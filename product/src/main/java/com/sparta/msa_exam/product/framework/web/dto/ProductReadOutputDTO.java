@@ -10,11 +10,11 @@ public record ProductReadOutputDTO(
     Integer supplyPrice
 ) {
 
-    public static ProductReadOutputDTO toDTO(Product products) {
+    public static ProductReadOutputDTO toDTO(Product product) {
         return new ProductReadOutputDTO(
-            products.getId(),
-            products.getName(),
-            products.getSupplyPrice()
+            product.getId(),
+            product.getName(),
+            product.getSupplyPrice()
         );
     }
 
