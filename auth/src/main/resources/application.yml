@@ -31,5 +31,11 @@ eureka:
 
 service:
   jwt:
-    access-expiration: 3600000
+    access-expiration: 1800000   # 1000 * 60 * 30
+    refresh-expiration: 604800000 # 1000 * 60 * 60 * 24 * 7
     secret-key: ${SECRET_KEY}
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  password: ${REDIS_PW}
