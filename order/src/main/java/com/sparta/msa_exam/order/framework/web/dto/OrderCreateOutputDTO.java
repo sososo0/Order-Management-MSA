@@ -9,39 +9,31 @@ import java.util.stream.Collectors;
 public record OrderCreateOutputDTO(
     Long orderId,
     OrderStatus status,
-    OrderDetails orderDetails,
+    List<ProductDetail> products,
     int orderTotalPrice,
     LocalDateTime orderTime
 ) {
 
-    public record OrderDetails(
-        List<ProductDetail> products
+    public record ProductDetail(
+        Long productId,
+        int quantity
     ) {
-        public record ProductDetail(
-            Long productId,
-            int quantity
-        ) {
 
-        }
     }
 
     public static OrderCreateOutputDTO toDTO(
         Order order
     ) {
-        List<OrderDetails.ProductDetail> productDetails = order.getProducts().stream()
-            .map(product -> new OrderDetails.ProductDetail(
+        List<ProductDetail> productDetails = order.getProducts().stream()
+            .map(product -> new ProductDetail(
                 product.getProductId(),
                 product.getQuantity()
             )).collect(Collectors.toList());
 
-        OrderDetails orderDetails = new OrderDetails(
-            productDetails
-        );
-
         return new OrderCreateOutputDTO(
             order.getId(),
             order.getOrderStatus(),
-            orderDetails,
+            productDetails,
             order.getOrderTotalPrice(),
             order.getOrderTime()
         );
