@@ -9,6 +9,7 @@ import com.sparta.msa_exam.order.domain.model.vo.OrderStatus;
 import com.sparta.msa_exam.order.framework.repository.OrderProductRepository;
 import com.sparta.msa_exam.order.framework.repository.OrderRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,12 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
 
     // TODO: 지우기
     private static final int TEST_COST = 10_000;
+
+    public Optional<Order> findByOrderId(Long orderId) {
+        return orderRepository.findById(orderId)
+            .map(OrderEntity::toDomain)
+            .or(Optional::empty);
+    }
 
     @Transactional
     @Override
