@@ -25,6 +25,7 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
 
     // TODO: 지우기
     private static final int TEST_COST = 10_000;
+    private static final Long TEST_USER_ID = 1L;
 
     public Optional<Order> findByOrderId(Long orderId) {
         return orderRepository.findById(orderId)
@@ -54,7 +55,7 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
                 }).collect(Collectors.toList());
             orderProductRepository.saveAll(orderProductEntities);
 
-            orderProductEntities.forEach(orderEntity::updateProductIds);
+            orderProductEntities.forEach(orderEntity::setProductIds);
 
             orderEntity.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
 
@@ -87,7 +88,7 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
                     OrderProductEntity.toEntity(orderEntity, orderForUpdate.productId(),
                         orderForUpdate.quantity())
                 );
-                orderEntity.updateProductIds(orderProductEntity);
+                orderEntity.updateProductIds(orderProductEntity, TEST_USER_ID);
             }
 
         } catch (Exception e) { // TODO: 예외처리 분리시키기

@@ -40,7 +40,12 @@ public class OrderProductEntity extends BaseEntity {
 
     // TODO: user 추가
 
-    public void updateOrder(OrderEntity order) {
+    public void setOrder(OrderEntity orderEntity) {
+        this.order = orderEntity;
+    }
+
+    public void updateOrder(OrderEntity order, Long userId) {
+        super.updateFrom(userId);
         this.order = order;
     }
 
