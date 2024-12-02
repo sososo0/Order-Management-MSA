@@ -47,10 +47,10 @@ public class OrderEntity extends BaseEntity {
     // TODO: UserEntity 추가하기
 
     public void updateProductIds(
-        List<OrderProductEntity> products
+        OrderProductEntity product
     ) {
-        this.productIds = products;
-        products.forEach(product -> product.updateOrder(this));
+        this.productIds.add(product);
+        product.updateOrder(this);
     }
 
     public void updateOrderStatus(
