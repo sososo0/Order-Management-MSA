@@ -31,8 +31,8 @@ public class ProductCommandController {
             productCreateInputDTO.name(),
             productCreateInputDTO.supplyPrice()
         );
-
         Product product = productUseCase.createProduct(productForCreate);
+
         return ProductCreateOutputDTO.toDTO(product);
     }
 }
