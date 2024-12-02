@@ -5,6 +5,7 @@ import com.sparta.msa_exam.auth.application.domain.UserForCreate;
 import com.sparta.msa_exam.auth.application.outputport.UserOutputPort;
 import com.sparta.msa_exam.auth.domain.model.UserEntity;
 import com.sparta.msa_exam.auth.framework.repository.UserRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,5 +30,12 @@ public class UserPersistenceAdapter implements UserOutputPort {
         userEntity.setAuditBy(userEntity.getId());
 
         return userEntity.toDomain();
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username)
+            .map(UserEntity::toDomain)
+            .or(Optional::empty);
     }
 }

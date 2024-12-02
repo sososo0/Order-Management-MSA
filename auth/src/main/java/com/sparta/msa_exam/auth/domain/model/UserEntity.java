@@ -69,6 +69,7 @@ public class UserEntity extends BaseEntity {
         return new User(
             this.id,
             this.username,
+            this.password,
             this.userRole
         );
     }
