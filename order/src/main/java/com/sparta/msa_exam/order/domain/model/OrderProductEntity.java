@@ -56,14 +56,19 @@ public class OrderProductEntity extends BaseEntity {
         this.quantity = quantity;
     }
 
+    public void updateQuantity(int quantity) {
+        this.quantity += quantity;
+    }
+
     public static OrderProductEntity toEntity(
         OrderEntity orderEntity,
-        OrderProductForCreate orderProductForCreate
+        Long productId,
+        int quantity
     ) {
         return new OrderProductEntity(
             orderEntity,
-            orderProductForCreate.productId(),
-            orderProductForCreate.quantity(),
+            productId,
+            quantity,
             1L
         );
     }

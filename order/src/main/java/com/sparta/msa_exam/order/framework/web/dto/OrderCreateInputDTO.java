@@ -6,11 +6,10 @@ import com.sparta.msa_exam.order.domain.model.vo.OrderStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public record OrderInputDTO(
+public record OrderCreateInputDTO(
     @NotNull(message = "상품ID를 입력해주세요.")
     Long productId,
 
@@ -20,15 +19,15 @@ public record OrderInputDTO(
     int quantity
 ) {
 
-    public record OrderCreateInputDTO(
+    public record OrderProductsInputDTO(
         @NotNull(message = "상품 리스트를 입력해주세요.")
-        List<OrderInputDTO> products
+        List<com.sparta.msa_exam.order.framework.web.dto.OrderCreateInputDTO> products
     ) {
 
     }
 
     public static OrderForCreate toDomain(
-        OrderCreateInputDTO productsRequest,
+        OrderProductsInputDTO productsRequest,
         OrderStatus orderStatus
     ) {
         List<OrderProductForCreate> orderProducts = productsRequest.products().stream()
