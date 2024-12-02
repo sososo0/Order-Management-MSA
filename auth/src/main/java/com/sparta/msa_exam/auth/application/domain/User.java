@@ -7,15 +7,18 @@ import lombok.Getter;
 public class User {
     private Long id;
     private String username;
+    private String password;
     private UserRole userRole;
 
     public User(
         Long id,
         String username,
+        String password,
         UserRole userRole
     ) {
         this.id = id;
         this.username = username;
+        this.password = password;
         this.userRole = userRole;
     }
 }
