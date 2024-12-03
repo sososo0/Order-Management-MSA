@@ -109,3 +109,9 @@ docker run -d \
 ```
 
 - 캐싱용 redis도 필요하지만, 캐싱 기능을 구현하지 못하여 생략합니다.
+
+4. Zipkin 컨테이너 생성
+
+```
+docker run -d -p 9411:9411 openzipkin/zipkin
+```
