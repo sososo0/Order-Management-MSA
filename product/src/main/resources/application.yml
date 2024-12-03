@@ -11,6 +11,18 @@ spring:
       enabled: true
     loadbalancer:
       enabled: true
+      ribbon:
+        product:
+          # WeightedRandomRule을 사용하여 가중치 기반 로드밸런싱
+          NFLoadBalancerRuleClassName: com.netflix.loadbalancer.WeightedRandomRule
+          # 서버 목록
+          listOfServers: http://localhost:19093, http://localhost:19094
+          # 서버별 가중치 설정 (70%, 30%)
+          ribbon:
+            product:
+              serverList:
+                - { address: "http://localhost:19093", weight: 7 }
+                - { address: "http://localhost:19094", weight: 3 }
 
   datasource:
     url: jdbc:mysql://localhost:3306/${DB_NAME}
