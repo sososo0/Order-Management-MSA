@@ -16,6 +16,10 @@
 /root (최상위 프로젝트 디렉토리)
   ├── build.gradle (최상위 빌드 스크립트)
   ├── settings.gradle (프로젝트 설정 파일)
+  ├── /common (공통 설정)
+  ├── /msa_exam (유레카)
+  |
+  ├── /product (상품 관련 모듈)
   |   ├── application/ # 주요 비즈니스 로직과 흐름을 관리
   |   |   ├── domain/ # 핵심 비즈니스 로직에서 사용될 벨류 객체
   |   |   ├── inputport/ # 애플리케이션의 유즈케이스를 구현
@@ -30,11 +34,7 @@
   |           ├── controller/ # REST API 컨트롤러와 요청 핸들링 클래스
   |           └── dto/ # 데이터 전송 객체를 모아두는 계층
   |
-  ├── /common (공통 모듈)
-  ├── /config (설정 모듈)
-  ├── /msa_exam (애플리케이션 모듈)
   ├── /gateway (게이트웨이 모듈)
-  ├── /product (상품 관련 모듈)
   ├── /order (주문 관련 모듈)
   └── /auth (인증 관련 모듈)
 ```
