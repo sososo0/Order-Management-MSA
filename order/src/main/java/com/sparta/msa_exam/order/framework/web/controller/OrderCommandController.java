@@ -1,11 +1,11 @@
 package com.sparta.msa_exam.order.framework.web.controller;
 
+import brave.Tracer;
 import com.sparta.msa_exam.order.application.domain.Order;
 import com.sparta.msa_exam.order.application.domain.OrderForCreate;
 import com.sparta.msa_exam.order.application.domain.OrderForUpdate;
 import com.sparta.msa_exam.order.application.usecase.OrderUseCase;
 import com.sparta.msa_exam.order.domain.model.vo.OrderStatus;
-import com.sparta.msa_exam.order.framework.client.ProductClient;
 import com.sparta.msa_exam.order.framework.web.dto.OrderCreateOutputDTO;
 import com.sparta.msa_exam.order.framework.web.dto.OrderCreateInputDTO;
 import com.sparta.msa_exam.order.framework.web.dto.OrderUpdateInputDTO;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderCommandController {
 
     private final OrderUseCase orderUseCase;
-    private final ProductClient productClient;
+    private final Tracer tracer;
 
     // TODO: Validated 사용해보기
 
@@ -43,6 +43,11 @@ public class OrderCommandController {
         @RequestHeader(value = "X-Role", required = true) String role,
         @RequestParam(value = "fail", required = false, defaultValue = "false") boolean fail
     ) {
+
+        String traceId = tracer.currentSpan() != null
+            ? Long.toHexString(tracer.currentSpan().context().traceId())
+            : "no-trace-id";
+        log.info("Received request to a create order with trace ID: {}", traceId);
 
         if (fail) {
             log.info("상품 API 호출 실패 케이스");
@@ -57,6 +62,8 @@ public class OrderCommandController {
         );
         Order order = orderUseCase.createOrder(orderForCreate);
 
+        log.info("Order create with trace ID: {}", traceId);
+
         return OrderCreateOutputDTO.toDTO(order);
     }
 
@@ -69,6 +76,11 @@ public class OrderCommandController {
         @RequestHeader(value = "X-Role", required = true) String role
     ) {
 
+        String traceId = tracer.currentSpan() != null
+            ? Long.toHexString(tracer.currentSpan().context().traceId())
+            : "no-trace-id";
+        log.info("Received request to a update order with trace ID: {}", traceId);
+
         OrderForUpdate orderForUpdate = OrderUpdateInputDTO.toDomain(
             orderId,
             product,
@@ -76,6 +88,8 @@ public class OrderCommandController {
             role
         );
         Order order = orderUseCase.updateOrder(orderForUpdate);
+
+        log.info("Order update with trace ID: {}", traceId);
 
         return OrderUpdateOutputDTO.toDTO(order, orderForUpdate.productId());
     }
