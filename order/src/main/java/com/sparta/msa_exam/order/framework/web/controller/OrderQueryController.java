@@ -7,6 +7,7 @@ import com.sparta.msa_exam.order.application.inputport.OrderInputPort;
 import com.sparta.msa_exam.order.framework.web.dto.OrderReadOutputDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ public class OrderQueryController {
     private final OrderInputPort orderInputPort;
     private final Tracer tracer;
 
+    @Cacheable(value = "orders", key = "#orderId", unless = "#result == null", cacheManager = "cacheManager")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{orderId}")
     public OrderReadOutputDTO getOrder(
