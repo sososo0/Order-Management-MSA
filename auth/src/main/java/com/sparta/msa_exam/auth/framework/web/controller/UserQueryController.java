@@ -1,5 +1,7 @@
 package com.sparta.msa_exam.auth.framework.web.controller;
 
+import com.sparta.common.exception.CustomException;
+import com.sparta.common.exception.ErrorCode;
 import com.sparta.msa_exam.auth.application.domain.User;
 import com.sparta.msa_exam.auth.framework.adapter.UserPersistenceAdapter;
 import com.sparta.msa_exam.auth.framework.web.dto.UserReadOutputDTO;
@@ -23,8 +25,14 @@ public class UserQueryController {
     public UserReadOutputDTO getUser(
         @PathVariable(name = "userId") Long userId
     ) {
-        // TODO: 예외처리하기
-        User user = userPersistenceAdapter.findByUserId(userId).get();
+
+        User user = userPersistenceAdapter.findByUserId(userId).orElseThrow(
+            () -> new CustomException(
+                ErrorCode.USER_NOT_EXIST.getCode(),
+                ErrorCode.USER_NOT_EXIST.getDescription(),
+                ErrorCode.USER_NOT_EXIST.getDetailMessage()
+            )
+        );
         return UserReadOutputDTO.toDTO(user);
     }
 }
