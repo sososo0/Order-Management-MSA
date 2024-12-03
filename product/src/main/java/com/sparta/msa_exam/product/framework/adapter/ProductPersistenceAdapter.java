@@ -6,6 +6,7 @@ import com.sparta.msa_exam.product.application.outputport.ProductOutputPort;
 import com.sparta.msa_exam.product.domain.model.ProductEntity;
 import com.sparta.msa_exam.product.framework.repository.ProductRepository;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,12 @@ import org.springframework.stereotype.Component;
 public class ProductPersistenceAdapter implements ProductOutputPort {
 
     private final ProductRepository productRepository;
+
+    public Optional<Product> findByProductId(Long productId) {
+        return productRepository.findByProductId(productId)
+            .map(ProductEntity::toDomain)
+            .or(Optional::empty);
+    }
 
     @Override
     public Product saveProduct(ProductForCreate productForCreate) {
