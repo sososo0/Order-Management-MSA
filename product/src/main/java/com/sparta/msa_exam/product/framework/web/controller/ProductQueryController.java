@@ -20,9 +20,7 @@ public class ProductQueryController {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
-    public ProductReadOutputDTO.GetProductsResponse getAllProducts(
-
-    ){
+    public ProductReadOutputDTO.GetProductsResponse getAllProducts(){
         List<Product> findProducts = productPersistenceAdapter.findAllProducts();
         return ProductReadOutputDTO.GetProductsResponse.toDTOList(findProducts);
     }
