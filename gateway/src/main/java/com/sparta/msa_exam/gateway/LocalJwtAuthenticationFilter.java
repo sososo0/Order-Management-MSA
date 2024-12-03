@@ -17,7 +17,6 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,8 +36,9 @@ public class LocalJwtAuthenticationFilter implements GlobalFilter {
     @Value("${service.jwt.secret-key}")
     private String SECRET_KEY;
 
-    @Value("${spring.cloud.gateway.routes[2].uri}")
-    private String AUTH_SERVICE_URL;
+    // TODO : 검토하기
+//    @Value("${spring.cloud.gateway.routes[2].uri}")
+    private String AUTH_SERVICE_URL = "http://localhost:19095";
 
     private final WebClient.Builder webClientBuilder;
 
@@ -73,55 +73,75 @@ public class LocalJwtAuthenticationFilter implements GlobalFilter {
                 try {
                     Claims claims = validateToken(token, exchange);
 
+
+                    log.info("Token: {}", claims);
+                    log.info("Request 헤더: {}", exchange.getRequest().getHeaders());
+
                     // TODO: OAuth2 규칙 검증 추가
                     if (!TOKEN_ISSUER.equals(claims.getIssuer())) {
+                        log.info("유효하지 않은 token issuer actual: {} expected: {}", claims.getIssuer(), TOKEN_ISSUER);
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 token issuer 입니다.");
                     }
                     if (claims.getExpiration().before(new Date())) {
+                        log.info("만료된 토큰");
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token이 만료되었습니다.");
                     }
 
-                    String stringUserId = claims.get("userId", String.class);
+                    String stringUserId = claims.getSubject();
                     if (stringUserId == null) {
-                        return onError(exchange, "Invalid user", HttpStatus.UNAUTHORIZED);
+                        return onError(exchange, "Invalid user 1", HttpStatus.UNAUTHORIZED);
                     }
 
                     Long userId = Long.parseLong(stringUserId);
 
-                    return isValidUser(userId).flatMap(isValid -> {
-                        if (!isValid) {
-                            return onError(exchange, "Invalid user", HttpStatus.UNAUTHORIZED);
-                        }
-                        return chain.filter(exchange);
-                    });
+                    log.info("UserID: {}", userId);
+
+                    return isValidUser(userId)
+                        .doOnNext(isValid -> log.info("User {} is valid: {}", userId, isValid))
+                        .flatMap(isValid -> {
+                            if (!isValid) {
+                                log.info("Invalid user: {}", userId);
+                                return onError(exchange, "Invalid user 2", HttpStatus.UNAUTHORIZED);
+                            }
+                            return chain.filter(exchange);
+                        });
                 } catch (Exception e) {
-                    return onError(exchange, "Invalid user", HttpStatus.UNAUTHORIZED);
+                    log.info("Exception 예외처리");
+                    return onError(exchange, "Invalid user 3", HttpStatus.UNAUTHORIZED);
                 }
             });
     }
 
     private Mono<Boolean> isValidUser(Long userId) {
         return getUser(userId)
-            .map(userReponseDTO -> true)
-            .onErrorResume(e -> Mono.just(false));
+            .doOnNext(userResponseDTO -> log.info("User retrieved successfully: {}", userResponseDTO))
+            .map(userResponseDTO -> true)
+            .onErrorResume(e -> {
+                log.warn("Error occurred while retrieving user with ID {}: {}", userId, e.getMessage());
+                return Mono.just(false);
+            });
     }
 
     private Mono<UserResponseDTO> getUser(Long userId) {
+        log.info("Attempting to fetch user with ID {}", userId);
         return webClientBuilder.baseUrl(AUTH_SERVICE_URL)
             .build()
             .method(HttpMethod.GET)
-            .uri("/api/auth/{userId}", userId)
+            .uri(uriBuilder -> uriBuilder.path("/api/auth/{userId}").build(userId))
             .retrieve()
             .onStatus(status -> status.is4xxClientError(), response -> {
-                return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "존재하지 않는 사용자입니다."));
+                log.warn("4xx error while fetching user with ID {}: {}", userId, response.statusCode());
+                return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."));
             })
             .onStatus(status -> status.is5xxServerError(), response -> {
-                return Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "서버 오류가 발생했습니다."));
+                log.error("5xx error while fetching user with ID {}: {}", userId, response.statusCode());
+                return Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
             })
-            .bodyToMono(UserResponseDTO.class);
+            .bodyToMono(UserResponseDTO.class)
+            .doOnSuccess(userResponseDTO -> log.info("Successfully fetched user: {}", userResponseDTO))
+            .doOnError(e -> log.error("Failed to fetch user with ID {}: {}", userId, e.getMessage()));
     }
+
 
     private Mono<String> extractToken(ServerWebExchange exchange) {
         String authHeader = exchange.getRequest().getHeaders().getFirst(HEADER);
@@ -133,9 +153,9 @@ public class LocalJwtAuthenticationFilter implements GlobalFilter {
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String error, HttpStatus status) {
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(status);
-        return response.setComplete();
+        log.error("Error occurred: {}, Status: {}", error, status);
+        exchange.getResponse().setStatusCode(status);
+        return exchange.getResponse().setComplete();
     }
 
     private Claims validateToken(String token, ServerWebExchange exchange) {

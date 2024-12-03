@@ -25,7 +25,7 @@ public class ProductEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, name = "name", columnDefinition = "varchar(255)")
+    @Column(name = "name", columnDefinition = "varchar(255)")
     private String name;
 
     @Column(nullable = false, name = "supply_price")
@@ -45,7 +45,7 @@ public class ProductEntity extends BaseEntity {
         return new ProductEntity(
             productForCreate.name(),
             productForCreate.supplyPrice(),
-            1L
+            productForCreate.userId()
         );
     }
 

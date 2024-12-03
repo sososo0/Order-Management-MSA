@@ -18,11 +18,18 @@ public record ProductCreateInputDTO(
 
     public static ProductForCreate toDomain(
         String name,
-        Integer supplyPrice
+        Integer supplyPrice,
+        String StringUserId,
+        String userRole
     ) {
+
+        Long userId = Long.parseLong(StringUserId);
+
         return new ProductForCreate(
             name,
-            supplyPrice
+            supplyPrice,
+            userId,
+            userRole
         );
     }
 }

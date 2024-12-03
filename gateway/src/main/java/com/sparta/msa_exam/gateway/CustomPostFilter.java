@@ -20,8 +20,8 @@ public class CustomPostFilter implements GlobalFilter, Ordered {
 
     private final Map<String, String> moduleMapping = Map.of(
         "auth", "auth",
-        "order", "order",
-        "product", "product"
+        "orders", "order",
+        "products", "product"
     );
 
     @Override
@@ -34,18 +34,24 @@ public class CustomPostFilter implements GlobalFilter, Ordered {
             log.info("module 명: {}", moduleName);
 
             return getPortFromDiscoveryClient(moduleName)
-                    .doOnNext(port -> log.info("module {}: 포트 {}", moduleName, port)) // 포트 로깅
-                    .flatMap(port -> {
+                .doOnNext(port -> log.info("module {}: 포트 {}", moduleName, port))
+                .flatMap(port -> {
+                    // 응답이 커밋되기 전에 헤더를 추가
+                    exchange.getResponse().beforeCommit(() -> {
                         exchange.getResponse().getHeaders().add("Server-Port", port);
-                        log.info("Server-Port header: {}", port); // 헤더 추가 로깅
                         return Mono.empty();
                     });
+                    return Mono.empty(); // 실제 작업 완료
+                });
         }));
     }
 
     private String extractModuleName(String path) {
-        String moduleName = path.split("/")[2];
-        return moduleMapping.getOrDefault(moduleName, "unknown");
+        String[] segments = path.split("/");
+        if (segments.length > 2) {
+            return moduleMapping.getOrDefault(segments[2], "unknown");
+        }
+        return "unknown";
     }
 
     private Mono<String> getPortFromDiscoveryClient(String moduleName) {
