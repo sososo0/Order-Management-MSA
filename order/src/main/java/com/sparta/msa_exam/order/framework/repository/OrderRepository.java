@@ -7,6 +7,4 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 
-    @Query("select o from OrderEntity o where o.id = :orderId and o.userId = :userId")
-    Optional<OrderEntity> findByOrderIdAndUserId(Long orderId, Long userId);
 }

@@ -1,13 +1,13 @@
 package com.sparta.msa_exam.product.application.inputport;
 
+import com.sparta.common.exception.CustomException;
+import com.sparta.common.exception.ErrorCode;
 import com.sparta.msa_exam.product.application.domain.Product;
 import com.sparta.msa_exam.product.application.domain.ProductForCreate;
 import com.sparta.msa_exam.product.application.outputport.ProductOutputPort;
 import com.sparta.msa_exam.product.application.usecase.ProductUseCase;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +19,11 @@ public class ProductInputPort implements ProductUseCase {
     public Product createProduct(ProductForCreate productForCreate) {
 
         if (!productForCreate.userRole().equals("OWNER")) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. User role is not OWNER.");
+            throw new CustomException(
+                ErrorCode.FORBIDDEN.getCode(),
+                ErrorCode.FORBIDDEN.getDescription(),
+                ErrorCode.FORBIDDEN.getDetailMessage()
+            );
         }
 
         return productOutputPort.saveProduct(productForCreate);

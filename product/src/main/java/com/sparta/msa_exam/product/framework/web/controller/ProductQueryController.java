@@ -1,5 +1,7 @@
 package com.sparta.msa_exam.product.framework.web.controller;
 
+import com.sparta.common.exception.CustomException;
+import com.sparta.common.exception.ErrorCode;
 import com.sparta.msa_exam.product.application.domain.Product;
 import com.sparta.msa_exam.product.framework.adapter.ProductPersistenceAdapter;
 import com.sparta.msa_exam.product.framework.web.dto.ProductReadOutputDTO;
@@ -31,8 +33,13 @@ public class ProductQueryController {
     public ProductReadOutputDTO getProducts(
         @PathVariable(value = "productId") Long productId
     ){
-        // TODO : 예외처리하기
-        Product findProduct = productPersistenceAdapter.findByProductId(productId).get();
+        Product findProduct = productPersistenceAdapter.findByProductId(productId).orElseThrow(
+            () -> new CustomException(
+                ErrorCode.PRODUCT_NOT_EXIST.getCode(),
+                ErrorCode.PRODUCT_NOT_EXIST.getDescription(),
+                ErrorCode.PRODUCT_NOT_EXIST.getDetailMessage()
+            )
+        );
         return ProductReadOutputDTO.toDTO(findProduct);
     }
 }
