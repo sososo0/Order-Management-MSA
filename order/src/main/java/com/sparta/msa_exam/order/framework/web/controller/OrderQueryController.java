@@ -5,7 +5,6 @@ import com.sparta.msa_exam.order.application.domain.Order;
 import com.sparta.msa_exam.order.application.domain.OrderForRead;
 import com.sparta.msa_exam.order.application.inputport.OrderInputPort;
 import com.sparta.msa_exam.order.framework.web.dto.OrderReadOutputDTO;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

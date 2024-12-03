@@ -1,0 +1,49 @@
+server:
+  port: 19095
+
+spring:
+  application:
+    name: auth
+
+  config:
+    import:
+      - optional:file:auth/.env[.properties]
+
+  cloud:
+    discovery:
+      enabled: true
+
+  datasource:
+    url: jdbc:mysql://order-msa.c34aea2im0jm.ap-northeast-2.rds.amazonaws.com:3306/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
+service:
+  jwt:
+    access-expiration: 1800000   # 1000 * 60 * 30
+    refresh-expiration: 604800000 # 1000 * 60 * 60 * 24 * 7
+    secret-key: ${SECRET_KEY}
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  password: ${REDIS_PW}
+
+logging:
+  level:
+    org.springframework.security: DEBUG

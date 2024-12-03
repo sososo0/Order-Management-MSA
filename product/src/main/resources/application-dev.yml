@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: product
+
+  config:
+    import:
+      - optional:file:product/.env[.properties]
+
+  cloud:
+    discovery:
+      enabled: true
+    loadbalancer:
+      enabled: true
+      ribbon:
+        product:
+          # WeightedRandomRule을 사용하여 가중치 기반 로드밸런싱
+          NFLoadBalancerRuleClassName: com.netflix.loadbalancer.WeightedRandomRule
+          # 서버 목록
+          listOfServers: http://localhost:19093, http://localhost:19094
+          # 서버별 가중치 설정 (70%, 30%)
+          ribbon:
+            product:
+              serverList:
+                - { address: "http://localhost:19093", weight: 7 }
+                - { address: "http://localhost:19094", weight: 3 }
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+redis:
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
+  password: ${REDIS_PW}
+
+server:
+  port: 19093
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.cache: DEBUG
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0
