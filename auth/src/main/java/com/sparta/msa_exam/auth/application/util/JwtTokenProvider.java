@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 public class JwtTokenProvider {
 
     @Value("${spring.application.name}")
-    private String issuer;
+    private String ISSUER;
 
     @Value("${service.jwt.access-expiration}")
     private long ACCESS_EXPIRATION;
@@ -67,7 +67,7 @@ public class JwtTokenProvider {
             .setSubject(user.getId().toString())
             .claim("role", user.getUserRole())
             .claim("type", TYPE_ACCESS)
-            .setIssuer(issuer)
+            .setIssuer(ISSUER)
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRATION))
             .signWith(secretKey, SignatureAlgorithm.HS512)
@@ -81,7 +81,7 @@ public class JwtTokenProvider {
             .setSubject(user.getId().toString())
             .claim("role", user.getUserRole())
             .claim("type", TYPE_REFRESH)
-            .setIssuer(issuer)
+            .setIssuer(ISSUER)
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION))
             .signWith(secretKey, SignatureAlgorithm.HS512)
