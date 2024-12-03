@@ -5,6 +5,10 @@ spring:
   application:
     name: gateway
 
+  config:
+    import:
+      - optional:file:gateway/.env[.properties]
+
   main:
     web-application-type: reactive
 
@@ -29,8 +33,22 @@ spring:
       discovery:
         locator:
           enabled: true
+          lower-case-service-id: true
+
+service:
+  jwt:
+    secret-key: ${SECRET_KEY}
+    issuer: ${TOKEN_ISSUER}
+
+public:
+  paths: "/api/auth/sign-up, /api/auth/sign-in"
 
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG

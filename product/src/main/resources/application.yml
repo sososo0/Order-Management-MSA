@@ -6,6 +6,12 @@ spring:
     import:
       - optional:file:product/.env[.properties]
 
+  cloud:
+    discovery:
+      enabled: true
+    loadbalancer:
+      enabled: true
+
   datasource:
     url: jdbc:mysql://localhost:3306/${DB_NAME}
     username: ${DB_USER}
@@ -28,3 +34,7 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
+
+logging:
+  level:
+    org.springframework.security: DEBUG

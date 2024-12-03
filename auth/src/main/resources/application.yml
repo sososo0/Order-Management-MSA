@@ -9,6 +9,10 @@ spring:
     import:
       - optional:file:auth/.env[.properties]
 
+  cloud:
+    discovery:
+      enabled: true
+
   datasource:
     url: jdbc:mysql://localhost:3306/${DB_NAME}
     username: ${DB_USER}
@@ -39,3 +43,7 @@ redis:
   host: ${REDIS_HOST}
   port: ${REDIS_PORT}
   password: ${REDIS_PW}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
