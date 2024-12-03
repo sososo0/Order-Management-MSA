@@ -3,28 +3,39 @@ package com.sparta.msa_exam.order.framework.adapter;
 import com.sparta.msa_exam.order.application.domain.Order;
 import com.sparta.msa_exam.order.application.domain.OrderForCreate;
 import com.sparta.msa_exam.order.application.domain.OrderForUpdate;
+import com.sparta.msa_exam.order.application.domain.OrderProductForCreate;
 import com.sparta.msa_exam.order.application.outputport.OrderOutputPort;
 import com.sparta.msa_exam.order.domain.model.OrderEntity;
 import com.sparta.msa_exam.order.domain.model.OrderProductEntity;
 import com.sparta.msa_exam.order.domain.model.vo.OrderStatus;
+import com.sparta.msa_exam.order.framework.client.ProductClient;
 import com.sparta.msa_exam.order.framework.repository.OrderProductRepository;
 import com.sparta.msa_exam.order.framework.repository.OrderRepository;
+import com.sparta.msa_exam.order.framework.web.dto.ProductResponseDTO;
+import feign.FeignException;
+import jakarta.ws.rs.NotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class OrderPersistenceAdapter implements OrderOutputPort {
 
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
+    private final ProductClient productClient;
+
 
     // TODO: 지우기
-    private static final int TEST_COST = 10_000;
     private static final Long TEST_USER_ID = 1L;
 
     public Optional<Order> findByOrderId(Long orderId) {
@@ -36,35 +47,58 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
     @Transactional
     @Override
     public Order saveOrder(OrderForCreate orderForCreate) {
-
-        // TODO: Product 찾고, 가격 계산 로직 추가
-
-        OrderEntity orderEntity = orderRepository.save(
-            OrderEntity.toEntity(orderForCreate.status(), TEST_COST));
-
         try {
+            int totalCost = calculateTotalCost(orderForCreate);
+            log.info("Calculated total cost: {}", totalCost);
+
+            OrderEntity orderEntity = orderRepository.save(
+                OrderEntity.toEntity(orderForCreate.status(), totalCost, orderForCreate.userId())
+            );
+            log.info("Order saved with ID: {}", orderEntity.getId());
+
             List<OrderProductEntity> orderProductEntities = orderForCreate.products().stream()
                 .map(orderProductForCreate -> {
-                    // TODO: Product 조회
-
                     return OrderProductEntity.toEntity(
                         orderEntity,
                         orderProductForCreate.productId(),
                         orderProductForCreate.quantity()
                     );
                 }).collect(Collectors.toList());
+            log.info("Order products saved: {}", orderProductEntities.size());
+
             orderProductRepository.saveAll(orderProductEntities);
 
             orderProductEntities.forEach(orderEntity::setProductIds);
 
             orderEntity.updateOrderStatus(OrderStatus.ORDER_SUCCESS);
 
+            return orderEntity.toDomain();
+
+        } catch (DataIntegrityViolationException e) {
+                log.error("Database error: {}", e.getMessage(), e);
+                throw new RuntimeException("Database error during order processing", e);
+
         } catch (Exception e) { // TODO: 예외처리 분리시키기
-            orderEntity.updateOrderStatus(OrderStatus.ORDER_FAIL);
             throw new RuntimeException("주문 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
         }
+    }
 
-        return orderEntity.toDomain();
+    private int calculateTotalCost(OrderForCreate orderForCreate) {
+        return orderForCreate.products().stream()
+            .mapToInt(product -> {
+                try {
+                    ProductResponseDTO productResponseDTO = productClient.getProduct(product.productId());
+                    if (productResponseDTO == null) {
+                        throw new NotFoundException("상품 ID " + product.productId() + "가 존재하지 않습니다.");
+                    }
+                    log.info("Product ID: {}", productResponseDTO.productId());
+                    return productResponseDTO.supplyPrice() * product.quantity();
+                } catch (FeignException e) {
+                    log.error("Product service 호출 중 오류: {}", e.getMessage());
+                    throw new RuntimeException("상품 정보를 가져오는 중 오류가 발생했습니다.");
+                }
+            })
+            .sum();
     }
 
     @Transactional

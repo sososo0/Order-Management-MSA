@@ -80,12 +80,13 @@ public class OrderEntity extends BaseEntity {
 
     public static OrderEntity toEntity(
         OrderStatus orderStatus,
-        int orderTotalPrice
+        int orderTotalPrice,
+        Long userId
     ) {
         return new OrderEntity(
             orderStatus,
             orderTotalPrice,
-            1L
+            userId
         );
     }
 

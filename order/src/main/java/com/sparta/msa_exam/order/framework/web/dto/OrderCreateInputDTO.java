@@ -28,15 +28,22 @@ public record OrderCreateInputDTO(
 
     public static OrderForCreate toDomain(
         OrderProductsInputDTO productsRequest,
-        OrderStatus orderStatus
+        OrderStatus orderStatus,
+        String stringUserId,
+        String role
     ) {
+
+        Long userId = Long.parseLong(stringUserId);
+
         List<OrderProductForCreate> orderProducts = productsRequest.products().stream()
             .map(product -> new OrderProductForCreate(product.productId(), product.quantity()))
             .collect(Collectors.toList());
 
         return new OrderForCreate(
             orderProducts,
-            orderStatus
+            orderStatus,
+            userId,
+            role
         );
     }
 }
