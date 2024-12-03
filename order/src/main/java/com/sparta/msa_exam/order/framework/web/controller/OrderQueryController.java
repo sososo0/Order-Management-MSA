@@ -5,9 +5,10 @@ import com.sparta.msa_exam.order.application.domain.Order;
 import com.sparta.msa_exam.order.application.domain.OrderForRead;
 import com.sparta.msa_exam.order.application.inputport.OrderInputPort;
 import com.sparta.msa_exam.order.framework.web.dto.OrderReadOutputDTO;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,8 +25,10 @@ public class OrderQueryController {
 
     private final OrderInputPort orderInputPort;
     private final Tracer tracer;
+    RedisTemplate<String, OrderReadOutputDTO> orderReadTemplate;
 
-    @Cacheable(value = "orders", key = "#orderId", unless = "#result == null", cacheManager = "cacheManager")
+    private static final long CACHE_EXPIRATION_TIME = 60;
+
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{orderId}")
     public OrderReadOutputDTO getOrder(
@@ -41,6 +44,18 @@ public class OrderQueryController {
 
         Long newUserId = Long.parseLong(userId);
 
+        // 캐시 키 설정
+//        String cacheKey = "order::" + orderId;
+//
+//        // 캐시에서 조회
+//        OrderReadOutputDTO cachedOrder = orderReadTemplate.opsForValue().get(cacheKey);
+
+//        if (cachedOrder != null) {
+//            log.info("Cache hit for orderId: {} with trace ID: {}", orderId, traceId);
+//            return cachedOrder; // 캐시가 있으면 캐시된 데이터 반환
+//        }
+
+        // 캐시 미스 시 DB에서 조회
         OrderForRead orderForRead = new OrderForRead(
             orderId,
             newUserId
@@ -49,6 +64,12 @@ public class OrderQueryController {
 
         log.info("Order read with trace ID: {}", traceId);
 
-        return OrderReadOutputDTO.toDTO(order);
+        // 조회된 주문 데이터를 DTO로 변환하여 캐시에 저장
+        OrderReadOutputDTO orderDto = OrderReadOutputDTO.toDTO(order);
+
+        // 캐시 저장 (60초 동안 유지)
+//        orderReadTemplate.opsForValue().set(cacheKey, orderDto, CACHE_EXPIRATION_TIME, TimeUnit.SECONDS);
+
+        return orderDto;
     }
 }

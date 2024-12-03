@@ -9,6 +9,7 @@ import com.sparta.msa_exam.product.framework.web.dto.ProductReadOutputDTO;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ public class ProductQueryController {
 
     private final ProductPersistenceAdapter productPersistenceAdapter;
     private final Tracer tracer;
+    private final RedisTemplate<String, ProductReadOutputDTO.GetProductsResponse> productGetTemplate;
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
@@ -34,11 +36,24 @@ public class ProductQueryController {
             : "no-trace-id";
         log.info("Received request to get products with trace ID: {}", traceId);
 
+        // 캐시에서 상품 목록 조회
+//        ProductReadOutputDTO.GetProductsResponse cachedProducts = productGetTemplate.opsForValue().get("productCache::all");
+//
+//        if (cachedProducts != null) {
+//            log.info("Cache hit for product list with trace ID: {}", traceId);
+//            return cachedProducts;
+//        }
+
         List<Product> findProducts = productPersistenceAdapter.findAllProducts();
+        log.info("Products read from DB with trace ID: {}", traceId);
 
-        log.info("Products read with trace ID: {}", traceId);
+        // DB에서 조회한 상품 목록을 DTO로 변환
+        ProductReadOutputDTO.GetProductsResponse productResponse = ProductReadOutputDTO.GetProductsResponse.toDTOList(findProducts);
 
-        return ProductReadOutputDTO.GetProductsResponse.toDTOList(findProducts);
+        // 상품 목록을 캐시 저장
+//        productGetTemplate.opsForValue().set("productCache::all", productResponse);
+
+        return productResponse;
     }
 
     @ResponseStatus(HttpStatus.OK)

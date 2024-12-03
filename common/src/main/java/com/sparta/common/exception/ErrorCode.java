@@ -33,7 +33,8 @@ public enum ErrorCode {
     RESOURCE_NOT_EXIST(404, "{RESOURCE}_NOT_EXIST", "클라이언트가 요청한 특정 리소스를 찾을 수 없는 경우"),
     RESOURCE_ALREADY_EXIST(409, "{RESOURCE}_ALREADY_EXIST", "클라이언트가 요청한 리소스가 이미 존재하는 경우"),
 
-    INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 오류");
+    INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 오류"),
+    CACHE_CONNECTION_ERROR(500, "CACHE_CONNECTION_ERROR", "캐시 오류");
 
     private final int code;
     private final String description;

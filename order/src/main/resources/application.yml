@@ -27,6 +27,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+redis:
+  host: localhost #${REDIS_HOST}
+  port: 6380 # ${REDIS_PORT}
+  password: 1234 # ${REDIS_PW}
+
 server:
   port: 19092
 
@@ -38,6 +43,8 @@ eureka:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.springframework.cache: DEBUG
+    org.springframework.cache.interceptor.CacheAspectSupport: DEBUG
 
 resilience4j:
   circuitbreaker:
@@ -76,3 +83,4 @@ management:
   tracing:
     sampling:
       probability: 1.0
+
