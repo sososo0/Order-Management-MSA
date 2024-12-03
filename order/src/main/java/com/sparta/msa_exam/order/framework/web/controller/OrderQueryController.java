@@ -1,7 +1,8 @@
 package com.sparta.msa_exam.order.framework.web.controller;
 
 import com.sparta.msa_exam.order.application.domain.Order;
-import com.sparta.msa_exam.order.framework.adapter.OrderPersistenceAdapter;
+import com.sparta.msa_exam.order.application.domain.OrderForRead;
+import com.sparta.msa_exam.order.application.inputport.OrderInputPort;
 import com.sparta.msa_exam.order.framework.web.dto.OrderReadOutputDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class OrderQueryController {
 
-    private final OrderPersistenceAdapter orderPersistenceAdapter;
+    private final OrderInputPort orderInputPort;
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/{orderId}")
@@ -27,10 +28,13 @@ public class OrderQueryController {
         @RequestHeader(value = "X-Role", required = true) String role
     ) {
 
-        // TODO : 예외처리 하기
-
         Long newUserId = Long.parseLong(userId);
-        Order order = orderPersistenceAdapter.findByOrderIdAndUserId(orderId, newUserId).get();
+
+        OrderForRead orderForRead = new OrderForRead(
+            orderId,
+            newUserId
+        );
+        Order order = orderInputPort.getOrder(orderForRead);
 
         return OrderReadOutputDTO.toDTO(order);
     }

@@ -41,13 +41,13 @@ public class OrderCommandController {
         @Valid @RequestBody OrderCreateInputDTO.OrderProductsInputDTO products,
         @RequestHeader(value = "X-User-Id", required = true) String userId,
         @RequestHeader(value = "X-Role", required = true) String role,
-        @RequestParam(value = "fail", required = false) String fail
+        @RequestParam(value = "fail", required = false, defaultValue = "false") boolean fail
     ) {
-//
-//        if (fail != null) {
-//            log.info("상품 API 호출 실패 케이스");
-//            productClient.getProduct(0L);
-//        }
+
+        if (fail) {
+            log.info("상품 API 호출 실패 케이스");
+            orderUseCase.failOrder(0L);
+        }
 
         OrderForCreate orderForCreate = OrderCreateInputDTO.toDomain(
             products,
