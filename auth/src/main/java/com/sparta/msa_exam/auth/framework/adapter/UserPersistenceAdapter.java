@@ -16,6 +16,12 @@ public class UserPersistenceAdapter implements UserOutputPort {
 
     private final UserRepository userRepository;
 
+    public Optional<User> findByUserId(Long userId) {
+        return userRepository.findByUserId(userId)
+            .map(UserEntity::toDomain)
+            .or(Optional::empty);
+    }
+
     @Transactional
     @Override
     public User createUser(UserForCreate userForCreate, String encodedPassword) {
