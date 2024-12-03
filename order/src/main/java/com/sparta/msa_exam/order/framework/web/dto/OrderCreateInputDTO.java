@@ -3,6 +3,7 @@ package com.sparta.msa_exam.order.framework.web.dto;
 import com.sparta.msa_exam.order.application.domain.OrderForCreate;
 import com.sparta.msa_exam.order.application.domain.OrderProductForCreate;
 import com.sparta.msa_exam.order.domain.model.vo.OrderStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -21,7 +22,8 @@ public record OrderCreateInputDTO(
 
     public record OrderProductsInputDTO(
         @NotNull(message = "상품 리스트를 입력해주세요.")
-        List<com.sparta.msa_exam.order.framework.web.dto.OrderCreateInputDTO> products
+        @Valid
+        List<@Valid OrderCreateInputDTO> products
     ) {
 
     }

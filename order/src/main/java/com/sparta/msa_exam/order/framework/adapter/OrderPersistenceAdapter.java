@@ -12,7 +12,9 @@ import com.sparta.msa_exam.order.framework.repository.OrderProductRepository;
 import com.sparta.msa_exam.order.framework.repository.OrderRepository;
 import com.sparta.msa_exam.order.framework.web.dto.ProductResponseDTO;
 import feign.FeignException;
-import jakarta.ws.rs.NotFoundException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,10 +32,16 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
     private final OrderRepository orderRepository;
     private final OrderProductRepository orderProductRepository;
     private final ProductClient productClient;
+    private final CircuitBreakerRegistry circuitBreakerRegistry;
 
-
-    // TODO: 지우기
-    private static final Long TEST_USER_ID = 1L;
+    @PostConstruct
+    public void registerEventListener() {
+        circuitBreakerRegistry.circuitBreaker("productService").getEventPublisher()
+            .onStateTransition(event -> log.info("####### CircuitBreaker State Transition: {}", event))
+            .onFailureRateExceeded(event -> log.info("####### CircuitBreaker Failure Rate Exceeded: {}", event))
+            .onCallNotPermitted(event -> log.info("####### CircuitBreaker Call Not Permitted: {}", event))
+            .onError(event -> log.info("####### CircuitBreaker Error: {}", event));
+    }
 
     public Optional<Order> findByOrderIdAndUserId(Long orderId, Long userId) {
         return orderRepository.findByOrderIdAndUserId(orderId, userId)
@@ -76,7 +84,7 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
                 throw new RuntimeException("Database error during order processing", e);
 
         } catch (Exception e) { // TODO: 예외처리 분리시키기
-            throw new RuntimeException("주문 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            throw e;
         }
     }
 
@@ -84,15 +92,13 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
         return orderForCreate.products().stream()
             .mapToInt(product -> {
                 try {
-                    ProductResponseDTO productResponseDTO = productClient.getProduct(product.productId());
-                    if (productResponseDTO == null) {
-                        throw new NotFoundException("상품 ID " + product.productId() + "가 존재하지 않습니다.");
-                    }
-                    log.info("Product ID: {}", productResponseDTO.productId());
+                    ProductResponseDTO productResponseDTO = getProductDetailsWithCircuitBreaker(product.productId());
+                    log.info("Product ID: {}, Quantity: {}, Supply Price: {}",
+                             productResponseDTO.productId(), product.quantity(), productResponseDTO.supplyPrice());
                     return productResponseDTO.supplyPrice() * product.quantity();
-                } catch (FeignException e) {
-                    log.error("Product service 호출 중 오류: {}", e.getMessage());
-                    throw new RuntimeException("상품 정보를 가져오는 중 오류가 발생했습니다.");
+                } catch (RuntimeException e) {
+                    log.error("Error fetching product details: {}", e.getMessage(), e);
+                    throw new RuntimeException("주문 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
                 }
             })
             .sum();
@@ -105,7 +111,7 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
             // TODO : 예외처리 하기
             OrderEntity orderEntity = orderRepository.findById(orderForUpdate.orderId()).get();
 
-            validateProductExists(orderForUpdate.productId());
+            getProductDetailsWithCircuitBreaker(orderForUpdate.productId());
 
             updateOrAddOrderProduct(orderEntity, orderForUpdate);
 
@@ -113,20 +119,8 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
         } catch (IllegalArgumentException e) {
             log.error("Invalid input: {}", e.getMessage(), e);
             throw e; // 클라이언트 오류
-        } catch (FeignException e) {
-            log.error("Product service 호출 중 오류: {}", e.getMessage(), e);
-            throw new RuntimeException("상품 정보를 가져오는 중 오류가 발생했습니다.", e);
         } catch (Exception e) { // TODO: 예외처리 분리시키기
             throw new RuntimeException("예외처리");
-        }
-    }
-
-    private void validateProductExists(Long productId) {
-        try {
-            productClient.getProduct(productId);
-        } catch (FeignException.NotFound e) {
-            log.error("Product not found: ID={}", productId);
-            throw new IllegalArgumentException("상품 ID " + productId + "가 존재하지 않습니다.");
         }
     }
 
@@ -149,5 +143,15 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
             orderEntity.updateProductIds(orderProductEntity, orderForUpdate.userId());
             log.info("Added new OrderProduct: {}", orderProductEntity);
         }
+    }
+
+    @CircuitBreaker(name = "OrderPersistenceAdapter", fallbackMethod = "fallbackGetProductDetails")
+    private ProductResponseDTO getProductDetailsWithCircuitBreaker(Long productId) {
+        return productClient.getProduct(productId);
+    }
+
+    private ProductResponseDTO fallbackGetProductDetails(Long productId, Throwable t) {
+        log.error("#### Fallback triggered for productId: {} due to: {}", productId, t.getMessage());
+        return new ProductResponseDTO(productId, "test",0); // 기본 공급 가격을 0으로 설정
     }
 }
