@@ -34,6 +34,9 @@ public class OrderEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderProductEntity> productIds = new ArrayList<>();
 
@@ -74,6 +77,7 @@ public class OrderEntity extends BaseEntity {
         Long userId
     ) {
         super(userId, userId);
+        this.userId = userId;
         this.orderStatus = orderStatus;
         this.orderTotalPrice = orderTotalPrice;
     }
@@ -101,6 +105,7 @@ public class OrderEntity extends BaseEntity {
 
         return new Order(
             this.id,
+            this.userId,
             this.orderStatus,
             products,
             this.orderTotalPrice,

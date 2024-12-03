@@ -35,8 +35,8 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
     // TODO: 지우기
     private static final Long TEST_USER_ID = 1L;
 
-    public Optional<Order> findByOrderId(Long orderId) {
-        return orderRepository.findById(orderId)
+    public Optional<Order> findByOrderIdAndUserId(Long orderId, Long userId) {
+        return orderRepository.findByOrderIdAndUserId(orderId, userId)
             .map(OrderEntity::toDomain)
             .or(Optional::empty);
     }
