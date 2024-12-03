@@ -49,18 +49,22 @@ public class OrderCommandController {
         return OrderCreateOutputDTO.toDTO(order);
     }
 
-    // TODO : fallback api 추가하기 
+    // TODO : fallback api 추가하기
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{orderId}")
     public OrderUpdateOutputDTO updateOrder(
         @PathVariable(name = "orderId") Long orderId,
-        @Valid @RequestBody OrderUpdateInputDTO product
+        @Valid @RequestBody OrderUpdateInputDTO product,
+        @RequestHeader(value = "X-User-Id", required = true) String userId,
+        @RequestHeader(value = "X-Role", required = true) String role
     ) {
 
         OrderForUpdate orderForUpdate = OrderUpdateInputDTO.toDomain(
             orderId,
-            product
+            product,
+            userId,
+            role
         );
         Order order = orderUseCase.updateOrder(orderForUpdate);
 

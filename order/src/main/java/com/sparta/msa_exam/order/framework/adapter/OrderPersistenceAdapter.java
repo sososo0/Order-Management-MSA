@@ -3,7 +3,6 @@ package com.sparta.msa_exam.order.framework.adapter;
 import com.sparta.msa_exam.order.application.domain.Order;
 import com.sparta.msa_exam.order.application.domain.OrderForCreate;
 import com.sparta.msa_exam.order.application.domain.OrderForUpdate;
-import com.sparta.msa_exam.order.application.domain.OrderProductForCreate;
 import com.sparta.msa_exam.order.application.outputport.OrderOutputPort;
 import com.sparta.msa_exam.order.domain.model.OrderEntity;
 import com.sparta.msa_exam.order.domain.model.OrderProductEntity;
@@ -20,10 +19,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -104,32 +101,53 @@ public class OrderPersistenceAdapter implements OrderOutputPort {
     @Transactional
     @Override
     public Order updateOrder(OrderForUpdate orderForUpdate) {
-
-        // TODO : 예외처리 하기
-        OrderEntity orderEntity = orderRepository.findById(orderForUpdate.orderId()).get();
-
         try {
-            Optional<OrderProductEntity> existingOrderProduct = orderEntity.getProductIds().stream()
-                .filter(product -> product.getProductId().equals(orderForUpdate.productId()))
-                .findFirst();
+            // TODO : 예외처리 하기
+            OrderEntity orderEntity = orderRepository.findById(orderForUpdate.orderId()).get();
 
-            if (existingOrderProduct.isPresent()) {
-                OrderProductEntity orderProductEntity = existingOrderProduct.get();
-                orderProductEntity.updateQuantity(orderForUpdate.quantity());
-                orderProductRepository.save(orderProductEntity);
-            } else {
-                OrderProductEntity orderProductEntity = orderProductRepository.save(
-                    OrderProductEntity.toEntity(orderEntity, orderForUpdate.productId(),
-                        orderForUpdate.quantity())
-                );
-                orderEntity.updateProductIds(orderProductEntity, TEST_USER_ID);
-            }
+            validateProductExists(orderForUpdate.productId());
 
+            updateOrAddOrderProduct(orderEntity, orderForUpdate);
+
+            return orderEntity.toDomain();
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid input: {}", e.getMessage(), e);
+            throw e; // 클라이언트 오류
+        } catch (FeignException e) {
+            log.error("Product service 호출 중 오류: {}", e.getMessage(), e);
+            throw new RuntimeException("상품 정보를 가져오는 중 오류가 발생했습니다.", e);
         } catch (Exception e) { // TODO: 예외처리 분리시키기
-            orderEntity.updateOrderStatus(OrderStatus.ORDER_FAIL);
             throw new RuntimeException("예외처리");
         }
+    }
 
-        return orderEntity.toDomain();
+    private void validateProductExists(Long productId) {
+        try {
+            productClient.getProduct(productId);
+        } catch (FeignException.NotFound e) {
+            log.error("Product not found: ID={}", productId);
+            throw new IllegalArgumentException("상품 ID " + productId + "가 존재하지 않습니다.");
+        }
+    }
+
+    private void updateOrAddOrderProduct(OrderEntity orderEntity, OrderForUpdate orderForUpdate) {
+        Optional<OrderProductEntity> existingOrderProduct = orderEntity.getProductIds().stream()
+            .filter(product -> product.getProductId().equals(orderForUpdate.productId()))
+            .findFirst();
+
+        if (existingOrderProduct.isPresent()) {
+            // 기존 OrderProduct 업데이트
+            OrderProductEntity orderProductEntity = existingOrderProduct.get();
+            orderProductEntity.updateQuantity(orderForUpdate.quantity());
+            orderProductRepository.save(orderProductEntity);
+            log.info("Updated OrderProduct: {}", orderProductEntity);
+        } else {
+            // 새로운 OrderProduct 추가
+            OrderProductEntity orderProductEntity = orderProductRepository.save(
+                OrderProductEntity.toEntity(orderEntity, orderForUpdate.productId(), orderForUpdate.quantity())
+            );
+            orderEntity.updateProductIds(orderProductEntity, orderForUpdate.userId());
+            log.info("Added new OrderProduct: {}", orderProductEntity);
+        }
     }
 }

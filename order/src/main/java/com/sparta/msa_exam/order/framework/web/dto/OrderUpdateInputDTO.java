@@ -17,12 +17,19 @@ public record OrderUpdateInputDTO(
 
     public static OrderForUpdate toDomain(
         Long orderId,
-        OrderUpdateInputDTO orderUpdateInputDTO
+        OrderUpdateInputDTO orderUpdateInputDTO,
+        String stringUserId,
+        String role
     ) {
+
+        Long userId = Long.parseLong(stringUserId);
+
         return new OrderForUpdate(
             orderId,
             orderUpdateInputDTO.productId(),
-            orderUpdateInputDTO.quantity()
+            orderUpdateInputDTO.quantity(),
+            userId,
+            role
         );
     }
 }
